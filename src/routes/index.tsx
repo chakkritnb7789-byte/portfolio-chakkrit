@@ -8,10 +8,12 @@ export const Route = createFileRoute("/")({
   component: Portfolio,
 });
 
-const fadeUp = {
+import type { Variants } from "framer-motion";
+
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
-} as const;
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
+};
 
 const skills = [
   { icon: Award, title: "ชนะเลิศระดับจังหวัด", desc: "อันดับ 1 ทำสื่อดิจิทัลคอนเทนต์ Motion Graphic & Info Graphic จังหวัดร้อยเอ็ด" },
