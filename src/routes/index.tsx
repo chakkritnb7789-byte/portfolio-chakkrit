@@ -91,7 +91,7 @@ function Portfolio() {
             </div>
             <h1 className="font-display font-extrabold text-5xl md:text-7xl leading-[1.05] tracking-tight">
               สวัสดี, ผม<br />
-              <span className="text-gradient animate-gradient">จักรกฤษณ์ สุวรรณบาง</span>
+              <span className="text-gradient animate-gradient text-4xl md:text-6xl">จักรกฤษณ์ สุวรรณบาง</span>
             </h1>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-xl">
               นักออกแบบกราฟิกและ Motion Graphic — สร้างสรรค์งานภาพที่เล่าเรื่องได้ด้วยจังหวะและสีสัน
