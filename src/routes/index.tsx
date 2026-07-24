@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Award, Briefcase, GraduationCap, Mail, Phone, MapPin, Sparkles, Palette, Video, Code2, Bot, ArrowDown } from "lucide-react";
 import { Scene3D } from "@/components/Scene3D";
 import profileImg from "@/assets/profile.jpg";
+import logoImg from "@/assets/logo.jpg";
 
 export const Route = createFileRoute("/")({
   component: Portfolio,
@@ -62,9 +63,18 @@ function Portfolio() {
       {/* Nav */}
       <header className="fixed top-0 inset-x-0 z-40">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <a href="#top" className="font-display font-bold text-lg tracking-tight">
-            <span className="text-gradient">จักรกฤษณ์</span>
-            <span className="text-muted-foreground">.dev</span>
+          <a href="#top" className="flex items-center gap-2.5 font-display font-bold text-lg tracking-tight">
+            <img
+              src={logoImg}
+              alt="Logo"
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-full object-contain shrink-0"
+            />
+            <span>
+              <span className="text-gradient">จักรกฤษณ์</span>
+              <span className="text-muted-foreground">.dev</span>
+            </span>
           </a>
           <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#about" className="hover:text-foreground transition">เกี่ยวกับ</a>

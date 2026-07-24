@@ -1,7 +1,35 @@
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Stars } from "@react-three/drei";
-import { Suspense, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { Mesh } from "three";
+
+/**
+ * ขับ render loop ด้วย FPS ที่จำกัด (คู่กับ frameloop="demand")
+ * ฉากหลังเป็นแค่ของตกแต่ง จึงไม่จำเป็นต้องวาดที่ 60fps —
+ * การลดเหลือ 30fps คืน main thread ให้การ scroll ไปครึ่งหนึ่ง
+ * requestAnimationFrame จะถูกเบรกเองเมื่อสลับแท็บ จึงหยุดวาดอัตโนมัติ
+ */
+function ThrottledRenderLoop({ fps = 30 }: { fps?: number }) {
+  const invalidate = useThree((s) => s.invalidate);
+
+  useEffect(() => {
+    const interval = 1000 / fps;
+    let raf = 0;
+    let last = 0;
+
+    const loop = (time: number) => {
+      raf = requestAnimationFrame(loop);
+      if (time - last < interval) return;
+      last = time;
+      invalidate();
+    };
+
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [fps, invalidate]);
+
+  return null;
+}
 
 function DistortedSphere({ position, color, scale = 1, speed = 1 }: { position: [number, number, number]; color: string; scale?: number; speed?: number }) {
   const ref = useRef<Mesh>(null);
@@ -13,7 +41,7 @@ function DistortedSphere({ position, color, scale = 1, speed = 1 }: { position: 
   return (
     <Float speed={1.4} rotationIntensity={0.6} floatIntensity={1.2}>
       <mesh ref={ref} position={position} scale={scale}>
-        <icosahedronGeometry args={[1, 8]} />
+        <icosahedronGeometry args={[1, 6]} />
         <MeshDistortMaterial
           color={color}
           distort={0.45}
@@ -38,14 +66,28 @@ function Torus({ position, color }: { position: [number, number, number]; color:
   return (
     <Float speed={1} rotationIntensity={1} floatIntensity={2}>
       <mesh ref={ref} position={position}>
-        <torusKnotGeometry args={[0.7, 0.22, 128, 16]} />
+        <torusKnotGeometry args={[0.7, 0.22, 96, 12]} />
         <meshStandardMaterial color={color} metalness={0.9} roughness={0.2} emissive={color} emissiveIntensity={0.3} />
       </mesh>
     </Float>
   );
 }
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
 export function Scene3D() {
+  const reducedMotion = usePrefersReducedMotion();
+
   return (
     <div className="fixed inset-0 -z-10 pointer-events-none">
       <div
@@ -53,17 +95,28 @@ export function Scene3D() {
         style={{ background: "var(--gradient-hero)" }}
       />
       <Canvas
+        // "demand" = วาดเฉพาะตอนที่ถูกสั่งเท่านั้น ไม่ใช่ทุก rAF
+        frameloop="demand"
         camera={{ position: [0, 0, 6], fov: 55 }}
-        dpr={[1, 1.5]}
-        gl={{ antialias: true, alpha: true }}
+        dpr={[1, 1.25]}
+        gl={{
+          // ปิด MSAA: เต็มจอ + วัตถุเป็นก้อนกลมมนอยู่แล้ว แทบไม่เห็นความต่าง แต่ประหยัด fill-rate มาก
+          antialias: false,
+          alpha: true,
+          stencil: false,
+          depth: true,
+          powerPreference: "high-performance",
+        }}
       >
         <Suspense fallback={null}>
+          {!reducedMotion && <ThrottledRenderLoop fps={30} />}
+
           <ambientLight intensity={0.4} />
           <directionalLight position={[5, 5, 5]} intensity={1.2} color="#ffd89b" />
           <pointLight position={[-5, -3, -2]} intensity={1.5} color="#6ec4ff" />
           <pointLight position={[3, -4, 2]} intensity={1.2} color="#ff8a5c" />
 
-          <Stars radius={60} depth={40} count={2500} factor={3} saturation={0} fade speed={0.6} />
+          <Stars radius={60} depth={40} count={1200} factor={3} saturation={0} fade speed={0.6} />
 
           <DistortedSphere position={[-3.2, 1.2, -1]} color="#e8b866" scale={1.3} speed={0.8} />
           <DistortedSphere position={[3.4, -1.5, -2]} color="#5aa9e6" scale={1.6} speed={0.5} />

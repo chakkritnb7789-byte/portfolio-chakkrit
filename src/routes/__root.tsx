@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import logoImg from "@/assets/logo.jpg";
 
 function NotFoundComponent() {
   return (
@@ -81,11 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "จักรกฤษณ์ สุวรรณบาง — Graphic Designer" },
       { property: "og:description", content: "พอร์ตโฟลิโอ Graphic & Motion Designer พร้อมประสบการณ์ทำสื่อดิจิทัลระดับรางวัล" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: logoImg },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: logoImg },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: logoImg, type: "image/png" },
+      { rel: "apple-touch-icon", href: logoImg },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

@@ -71,9 +71,37 @@
 
 @utility glass {
   background: color-mix(in oklab, var(--card) 70%, transparent);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(10px);
   border: 1px solid color-mix(in oklab, white 8%, transparent);
   box-shadow: var(--shadow-card);
+  /* จำกัดขอบเขตการ paint ไว้ในกล่องตัวเอง เบราว์เซอร์จะได้ไม่ต้องคิดเลย์เอาต์ใหม่ทั้งหน้า */
+  contain: paint;
+}
+
+/*
+ * backdrop-filter บังคับให้ scroll ไปทำงานบน main thread และต้อง re-blur ใหม่ทุกเฟรม
+ * บนจอเล็ก/GPU มือถือ ต้นทุนนี้สูงกว่าที่ได้ — ตัดทิ้งแล้วใช้พื้นทึบขึ้นแทน
+ * หน้าตาต่างกันน้อยมากเพราะฉากหลังมืดอยู่แล้ว
+ */
+@media (max-width: 768px) {
+  .glass {
+    backdrop-filter: none;
+    background: color-mix(in oklab, var(--card) 92%, transparent);
+  }
+}
+
+/* ผู้ใช้ที่ตั้งค่าลดการเคลื่อนไหวไว้ — ตัดทั้ง blur และ animation ทิ้ง */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .glass {
+    backdrop-filter: none;
+    background: color-mix(in oklab, var(--card) 92%, transparent);
+  }
+  .animate-float,
+  .animate-gradient,
+  .animate-pulse {
+    animation: none;
+  }
 }
 
 @utility text-gradient {
