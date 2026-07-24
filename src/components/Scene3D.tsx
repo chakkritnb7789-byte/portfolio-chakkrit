@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Float, MeshDistortMaterial, Stars } from "@react-three/drei";
+import { MeshDistortMaterial, Stars } from "@react-three/drei";
 import { Suspense, useEffect, useRef, useState } from "react";
 import type { Mesh } from "three";
 
@@ -31,45 +31,63 @@ function ThrottledRenderLoop({ fps = 30 }: { fps?: number }) {
   return null;
 }
 
-function DistortedSphere({ position, color, scale = 1, speed = 1 }: { position: [number, number, number]; color: string; scale?: number; speed?: number }) {
+function DistortedSphere({ position, color, scale = 1, speed = 1, movementSpeed = 1 }: { position: [number, number, number]; color: string; scale?: number; speed?: number; movementSpeed?: number }) {
   const ref = useRef<Mesh>(null);
+  const initialPosition = useRef(position);
+
   useFrame((state) => {
     if (!ref.current) return;
-    ref.current.rotation.x = state.clock.elapsedTime * 0.15 * speed;
-    ref.current.rotation.y = state.clock.elapsedTime * 0.2 * speed;
+    const t = state.clock.elapsedTime * movementSpeed;
+    
+    // Strong rotation animation - clearly visible
+    ref.current.rotation.x += 0.008 * speed;
+    ref.current.rotation.y += 0.012 * speed;
+    ref.current.rotation.z += 0.006 * speed;
+    
+    // Larger position animation - obvious movement
+    ref.current.position.x = initialPosition.current[0] + Math.sin(t * 0.8) * 2.0 + Math.cos(t * 0.5) * 1.2;
+    ref.current.position.y = initialPosition.current[1] + Math.cos(t * 0.6) * 1.8 + Math.sin(t * 0.4) * 1.0;
+    ref.current.position.z = initialPosition.current[2] + Math.sin(t * 0.7) * 1.5 + Math.cos(t * 0.3) * 0.8;
   });
   return (
-    <Float speed={1.4} rotationIntensity={0.6} floatIntensity={1.2}>
-      <mesh ref={ref} position={position} scale={scale}>
-        <icosahedronGeometry args={[1, 6]} />
-        <MeshDistortMaterial
-          color={color}
-          distort={0.45}
-          speed={2}
-          roughness={0.15}
-          metalness={0.8}
-          emissive={color}
-          emissiveIntensity={0.25}
-        />
-      </mesh>
-    </Float>
+    <mesh ref={ref} position={position} scale={scale}>
+      <icosahedronGeometry args={[1, 6]} />
+      <MeshDistortMaterial
+        color={color}
+        distort={0.45}
+        speed={2}
+        roughness={0.15}
+        metalness={0.8}
+        emissive={color}
+        emissiveIntensity={0.25}
+      />
+    </mesh>
   );
 }
 
-function Torus({ position, color }: { position: [number, number, number]; color: string }) {
+function Torus({ position, color, movementSpeed = 1 }: { position: [number, number, number]; color: string; movementSpeed?: number }) {
   const ref = useRef<Mesh>(null);
+  const initialPosition = useRef(position);
+
   useFrame((state) => {
     if (!ref.current) return;
-    ref.current.rotation.x = state.clock.elapsedTime * 0.3;
-    ref.current.rotation.y = state.clock.elapsedTime * 0.4;
+    const t = state.clock.elapsedTime * movementSpeed;
+    
+    // Strong rotation animation - clearly visible
+    ref.current.rotation.x += 0.015;
+    ref.current.rotation.y += 0.018;
+    ref.current.rotation.z += 0.010;
+    
+    // Larger position animation - obvious movement
+    ref.current.position.x = initialPosition.current[0] + Math.cos(t * 0.7) * 2.0 + Math.sin(t * 0.4) * 1.3;
+    ref.current.position.y = initialPosition.current[1] + Math.sin(t * 0.65) * 1.9 + Math.cos(t * 0.35) * 1.1;
+    ref.current.position.z = initialPosition.current[2] + Math.cos(t * 0.6) * 1.2 + Math.sin(t * 0.5) * 0.9;
   });
   return (
-    <Float speed={1} rotationIntensity={1} floatIntensity={2}>
-      <mesh ref={ref} position={position}>
-        <torusKnotGeometry args={[0.7, 0.22, 96, 12]} />
-        <meshStandardMaterial color={color} metalness={0.9} roughness={0.2} emissive={color} emissiveIntensity={0.3} />
-      </mesh>
-    </Float>
+    <mesh ref={ref} position={position}>
+      <torusKnotGeometry args={[0.7, 0.22, 96, 12]} />
+      <meshStandardMaterial color={color} metalness={0.9} roughness={0.2} emissive={color} emissiveIntensity={0.3} />
+    </mesh>
   );
 }
 
@@ -95,8 +113,8 @@ export function Scene3D() {
         style={{ background: "var(--gradient-hero)" }}
       />
       <Canvas
-        // "demand" = วาดเฉพาะตอนที่ถูกสั่งเท่านั้น ไม่ใช่ทุก rAF
-        frameloop="demand"
+        // Allow continuous animation while keeping it optimized
+        frameloop="always"
         camera={{ position: [0, 0, 6], fov: 55 }}
         dpr={[1, 1.25]}
         gl={{
@@ -118,11 +136,11 @@ export function Scene3D() {
 
           <Stars radius={60} depth={40} count={1200} factor={3} saturation={0} fade speed={0.6} />
 
-          <DistortedSphere position={[-3.2, 1.2, -1]} color="#e8b866" scale={1.3} speed={0.8} />
-          <DistortedSphere position={[3.4, -1.5, -2]} color="#5aa9e6" scale={1.6} speed={0.5} />
-          <DistortedSphere position={[0, 2.5, -3]} color="#c86b5c" scale={0.9} speed={1.2} />
-          <Torus position={[2.5, 2, -1.5]} color="#f0c674" />
-          <Torus position={[-2.8, -1.8, -1]} color="#7bb5d6" />
+          <DistortedSphere position={[-3.2, 1.2, -1]} color="#e8b866" scale={1.3} speed={0.8} movementSpeed={0.6} />
+          <DistortedSphere position={[3.4, -1.5, -2]} color="#5aa9e6" scale={1.6} speed={0.5} movementSpeed={0.5} />
+          <DistortedSphere position={[0, 2.5, -3]} color="#c86b5c" scale={0.9} speed={1.2} movementSpeed={0.7} />
+          <Torus position={[2.5, 2, -1.5]} color="#f0c674" movementSpeed={0.55} />
+          <Torus position={[-2.8, -1.8, -1]} color="#7bb5d6" movementSpeed={0.65} />
         </Suspense>
       </Canvas>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background/60" />
